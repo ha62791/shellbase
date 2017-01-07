@@ -1,5 +1,5 @@
 # shellbase
-A lightweight Python wrapper for Hbase shell
+A lightweight Python wrapper for HBase shell
 
 It provides an alternative to HBase's thrift/REST API<br/>
 Supports both Python 2 and 3<br/>
