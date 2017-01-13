@@ -21,16 +21,16 @@ import time
 from subprocess import Popen, PIPE
 
 
-def setNonBlocking(fd):
-    flags = fcntl.fcntl(fd, fcntl.F_GETFL)
-    flags = flags | os.O_NONBLOCK
-    fcntl.fcntl(fd, fcntl.F_SETFL, flags)
-
-
 class HBaseShell:
 
     def __init__(self):
         self.__shell = None
+
+
+    def __setNonBlocking(fd):
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        flags = flags | os.O_NONBLOCK
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 
 
     def isOpen(self):
@@ -42,17 +42,17 @@ class HBaseShell:
             return
 
         p = Popen([pathToHBaseShell,"shell"], stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1)
-        setNonBlocking(p.stdout)
-        setNonBlocking(p.stderr)
+        HBaseShell.__setNonBlocking(p.stdout)
+        HBaseShell.__setNonBlocking(p.stderr)
         self.__shell = p
 
 
     def close(self):
-         if self.isOpen():
-              self.__shell.stdin.write(b'exit\n')
-              self.__shell.stdin.flush()
-              time.sleep(1)
-              self.__shell.stdout.close()
-              self.__shell.stderr.close()
-              self.__shell.kill()
-              self.__shell = None
+        if self.isOpen():
+            self.__shell.stdin.write(b'exit\n')
+            self.__shell.stdin.flush()
+            time.sleep(1)
+            self.__shell.stdout.close()
+            self.__shell.stderr.close()
+            self.__shell.kill()
+            self.__shell = None
