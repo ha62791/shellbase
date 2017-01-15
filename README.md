@@ -1,3 +1,4 @@
+# Under Development
 # ShellBase - Python Wrapper for HBase Shell
 
 ### It provides an alternative to HBase's thrift/REST API
