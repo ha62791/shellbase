@@ -2,5 +2,6 @@
 
 ## [Unreleased]
 ### Added
-- Show version (@ha62791)
 - Open/Close HBase shell (@ha62791)
+- Show version (@ha62791)
+- List tables (@ha62791)

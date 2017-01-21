@@ -26,7 +26,7 @@ class HBaseShell:
 
     def __init__(self):
         self.__shell = None
-        self.__shell_resp_timeout_sec = 10.0
+        self.__shell_resp_timeout_sec = 15.0
 
 
     def __set_non_blocking(fd):
@@ -139,3 +139,42 @@ class HBaseShell:
 
         self.__run_cmd_wait_output(b"version", onNewLinesHandler)
         return versionStr
+
+
+    def listTables(self, filterRegex=None):
+
+        cmd = b"list"
+
+        if filterRegex is not None:
+            if type(filterRegex) is str:
+                cmd = b"list '" + filterRegex.replace("'","\\'").encode() + b"'"
+            else:
+                raise ValueError("'filterRegex' should be of type 'str'")
+
+        output = ""
+        hasError = False
+
+        def onNewLinesHandler(lines):
+            nonlocal output
+            nonlocal hasError
+            t_line = ''
+
+            for line in lines:
+                t_line = line.decode()
+                output += t_line
+
+                if t_line.lower().startswith('error:'):
+                    hasError = True
+
+            if hasError:
+                return output.endswith(os.linesep*3)
+
+            return t_line.startswith("[")
+
+
+        self.__run_cmd_wait_output(cmd, onNewLinesHandler)
+
+        if hasError:
+            raise RuntimeError(output[ output.lower().index('error:') : output.index('Here is') ].strip())
+
+        return output[ output.index('TABLE')+5 : output.index(' row(s) in ') ].strip().split(os.linesep)[:-1]
