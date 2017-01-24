@@ -141,6 +141,30 @@ class HBaseShell:
         return versionStr
 
 
+    def whoami(self):
+        output = ""
+
+        def onNewLinesHandler(lines):
+            nonlocal output
+
+            for line in lines:
+                output += line.decode()
+
+            return output.endswith(os.linesep*2)
+
+        self.__run_cmd_wait_output(b"whoami", onNewLinesHandler)
+
+        lines = output.strip().split(os.linesep)
+        t_infos = lines[1].split(' (')
+        t_groups = lines[2].strip().replace('groups:', '').split(',')
+
+        return {
+            'user': t_infos[0].strip(),
+            'auth': t_infos[1].strip()[5:-1].strip(),
+            'groups': [ grp.strip() for grp in t_groups ]
+        }
+
+
     def listTables(self, filterRegex=None):
 
         cmd = b"list"
