@@ -67,7 +67,7 @@ setShellRespTimeout
 
 shell.setShellRespTimeout(None)
 shell.setShellRespTimeout('123')
-shell.setShellRespTimeout(10)
+shell.setShellRespTimeout(9)
 '''
 ValueError: 'sec' should be an integer of at least 10
 '''
@@ -176,3 +176,13 @@ RuntimeError: ERROR: Unclosed character class near index 12
 .*test\d[5[6]
             ^
 '''
+
+
+'''
+====================
+enableTable
+disableTable
+===================='''
+
+
+
