@@ -35,6 +35,10 @@ class HBaseShell:
         fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 
 
+    def __extract_err_msg(output):
+        return output[ output.lower().index('error:') : output.index('Here is') ].strip()
+
+
     def __run_cmd_wait_output(self, cmd, onNewLinesHandler):
         if not self.isOpen():
             raise RuntimeError("Shell is not open")
@@ -70,6 +74,34 @@ class HBaseShell:
             print(line.decode())
 
 
+    def __run_cmd_default_new_lines_handler(self, cmd, endOfOutput):
+
+        output = ""
+        hasError = False
+
+        def onNewLinesHandler(lines):
+            nonlocal output
+            nonlocal hasError
+            t_line = ''
+
+            for line in lines:
+                t_line = line.decode()
+                output += t_line
+
+                if t_line.lower().startswith('error:'):
+                    hasError = True
+
+            if hasError:
+                return output.endswith(os.linesep*3)
+
+            return output.endswith(endOfOutput)
+
+
+        self.__run_cmd_wait_output(cmd, onNewLinesHandler)
+
+        return (output, hasError)
+
+
     def setShellRespTimeout(self, sec):
         if type(sec) is not int or sec < 10:
             raise ValueError("'sec' should be an integer of at least 10")
@@ -90,19 +122,8 @@ class HBaseShell:
         HBaseShell.__set_non_blocking(p.stderr)
         self.__shell = p
 
-        startUpOutput = ""
-
-        def onNewLinesHandler(lines):
-            nonlocal startUpOutput
-
-            for line in lines:
-                startUpOutput += line.decode()
-
-            return startUpOutput.endswith(os.linesep*3)
-
-
-        self.__run_cmd_wait_output(b"", onNewLinesHandler)
-        print(startUpOutput.strip())
+        (output, hasError) = self.__run_cmd_default_new_lines_handler(b"", os.linesep*3)
+        print(output.strip())
 
 
     def close(self):
@@ -117,42 +138,12 @@ class HBaseShell:
 
 
     def version(self):
-        output = ""
-        versionStr = ""
-        nextLineIsVersionStr = False
-
-        def onNewLinesHandler(lines):
-            nonlocal output
-            nonlocal versionStr
-            nonlocal nextLineIsVersionStr
-
-            for line in lines:
-                output += line.decode()
-                if versionStr == "":
-                    if nextLineIsVersionStr:
-                        versionStr = line.decode().strip()
-                    else:
-                        nextLineIsVersionStr = True
-
-            return output.endswith(os.linesep*2)
-
-
-        self.__run_cmd_wait_output(b"version", onNewLinesHandler)
-        return versionStr
+        (output, hasError) = self.__run_cmd_default_new_lines_handler(b"version", os.linesep*2)
+        return output.split(os.linesep)[1]
 
 
     def whoami(self):
-        output = ""
-
-        def onNewLinesHandler(lines):
-            nonlocal output
-
-            for line in lines:
-                output += line.decode()
-
-            return output.endswith(os.linesep*2)
-
-        self.__run_cmd_wait_output(b"whoami", onNewLinesHandler)
+        (output, hasError) = self.__run_cmd_default_new_lines_handler(b"whoami", os.linesep*2)
 
         lines = output.strip().split(os.linesep)
         t_infos = lines[1].split(' (')
@@ -175,30 +166,9 @@ class HBaseShell:
             else:
                 raise ValueError("'filterRegex' should be of type 'str'")
 
-        output = ""
-        hasError = False
-
-        def onNewLinesHandler(lines):
-            nonlocal output
-            nonlocal hasError
-            t_line = ''
-
-            for line in lines:
-                t_line = line.decode()
-                output += t_line
-
-                if t_line.lower().startswith('error:'):
-                    hasError = True
-
-            if hasError:
-                return output.endswith(os.linesep*3)
-
-            return t_line.startswith("[")
-
-
-        self.__run_cmd_wait_output(cmd, onNewLinesHandler)
+        (output, hasError) = self.__run_cmd_default_new_lines_handler(cmd, "]"+os.linesep)
 
         if hasError:
-            raise RuntimeError(output[ output.lower().index('error:') : output.index('Here is') ].strip())
+            raise RuntimeError(HBaseShell.__extract_err_msg(output))
 
         return output[ output.index('TABLE')+5 : output.index(' row(s) in ') ].strip().split(os.linesep)[:-1]
