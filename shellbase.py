@@ -173,15 +173,3 @@ class HBaseShell:
             raise RuntimeError(HBaseShell.__extract_err_msg(output))
 
         return output[ output.index('TABLE')+5 : output.index(' row(s) in ') ].strip().split(os.linesep)[:-1]
-
-
-# Test ERROR
-# Test shutdonw master/regionserver
-    def printAll(self):
-        print('stdout:')
-        for line in self.__shell.stdout:
-            print(line)
-
-        print('stderr:')
-        for line in self.__shell.stderr:
-            print(line)
