@@ -178,11 +178,4 @@ RuntimeError: ERROR: Unclosed character class near index 12
 '''
 
 
-'''
-====================
-enableTable
-disableTable
-===================='''
-
-
 

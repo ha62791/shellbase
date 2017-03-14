@@ -29,12 +29,14 @@ class HBaseShell:
         self.__shell_resp_timeout_sec = 15.0
 
 
+    @staticmethod
     def __set_non_blocking(fd):
         flags = fcntl.fcntl(fd, fcntl.F_GETFL)
         flags = flags | os.O_NONBLOCK
         fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 
 
+    @staticmethod
     def __extract_err_msg(output):
         return output[ output.lower().index('error:') : output.index('Here is') ].strip()
 
@@ -82,7 +84,6 @@ class HBaseShell:
         def onNewLinesHandler(lines):
             nonlocal output
             nonlocal hasError
-            t_line = ''
 
             for line in lines:
                 t_line = line.decode()
@@ -172,3 +173,15 @@ class HBaseShell:
             raise RuntimeError(HBaseShell.__extract_err_msg(output))
 
         return output[ output.index('TABLE')+5 : output.index(' row(s) in ') ].strip().split(os.linesep)[:-1]
+
+
+# Test ERROR
+# Test shutdonw master/regionserver
+    def printAll(self):
+        print('stdout:')
+        for line in self.__shell.stdout:
+            print(line)
+
+        print('stderr:')
+        for line in self.__shell.stderr:
+            print(line)
