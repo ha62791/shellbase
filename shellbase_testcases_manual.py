@@ -178,4 +178,39 @@ RuntimeError: ERROR: Unclosed character class near index 12
 '''
 
 
+'''
+====================
+existsTable
+===================='''
 
+shell.existsTable(None)
+shell.existsTable(123)
+shell.existsTable(b'test')
+'''
+ValueError: 'tableName' should be of type 'str'
+'''
+
+# sudo service hbase-regionserver stop
+
+shell.listTables('test')
+'''
+TimeoutError: No response from shell for 15 seconds.
+Please check HBase health status and reopen HBaseShell.
+'''
+
+# sudo service hbase-regionserver start
+
+shell.existsTable("test")
+'''
+True
+'''
+
+shell.existsTable("testing")
+'''
+False
+'''
+
+shell.existsTable("te'st")
+'''
+RuntimeError: ERROR: Illegal character code:39, <'> at 2. User-space table qualifiers can only contain 'alphanumeric characters': i.e. [a-zA-Z_0-9-.]: te'st
+'''

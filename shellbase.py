@@ -37,6 +37,17 @@ class HBaseShell:
 
 
     @staticmethod
+    def __handle_single_quote(string):
+        return string.replace("'","\\'")
+
+
+    @staticmethod
+    def __check_param_table_name(tableName):
+        if type(tableName) is not str:
+            raise ValueError("'tableName' should be of type 'str'")
+
+
+    @staticmethod
     def __extract_err_msg(output):
         return output[ output.lower().index('error:') : output.index('Here is') ].strip()
 
@@ -163,13 +174,26 @@ class HBaseShell:
 
         if filterRegex is not None:
             if type(filterRegex) is str:
-                cmd = b"list '" + filterRegex.replace("'","\\'").encode() + b"'"
+                cmd = b"list '" + self.__handle_single_quote(filterRegex).encode() + b"'"
             else:
                 raise ValueError("'filterRegex' should be of type 'str'")
 
         (output, hasError) = self.__run_cmd_default_new_lines_handler(cmd, "]"+os.linesep)
 
         if hasError:
-            raise RuntimeError(HBaseShell.__extract_err_msg(output))
+            raise RuntimeError(self.__extract_err_msg(output))
 
         return output[ output.index('TABLE')+5 : output.index(' row(s) in ') ].strip().split(os.linesep)[:-1]
+
+
+    def existsTable(self, tableName):
+        self.__check_param_table_name(tableName)
+        cmd = b"exists '" + self.__handle_single_quote(tableName).encode() + b"'"
+
+        (output, hasError) = self.__run_cmd_default_new_lines_handler(cmd, ' seconds'+os.linesep*2)
+
+        if hasError:
+            raise RuntimeError(self.__extract_err_msg(output))
+
+        return "does exist" in output
+
